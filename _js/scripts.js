@@ -8,7 +8,7 @@ $( document ).ready( function() {
     toggleMobileNav();
     ShowHideNav();
     formCheck();
-
+    checkTabSelected();
 } );
 
 // Close modal if ESC is pressed
@@ -18,9 +18,30 @@ $( document ).keyup( function( e ) {
 
 $( window ).resize( function() {
     $( ".header" ).removeClass( "hide-nav" ); // Ensure nav will be shown on resize
+    $( ".header__links" ).removeClass( "js--open" );
+    $( ".header__toggle" ).removeClass( "--open");
     $( ".header__links" ).removeAttr( "style" ); // If mobile nav was collapsed, make sure it's show on DESK
     $( ".header__overlay" ).remove(); // Remove mobile navigation overlay in case it was opened
 } );
+
+function checkTabSelected() {
+    var path = document.location.pathname.toLowerCase()
+    const menus = $( ".header__link_a" )
+    if (path[path.length - 1] === "/") {
+        path = path.substring(0, path.length - 1)
+    }
+    for (var i = 0; i < menus.length; i++) {
+        const item_a = $( menus[i] )
+        var item_a_href = item_a.attr("href").toLowerCase()
+        if (item_a_href[item_a_href.length - 1] === "/") {
+            item_a_href = item_a_href.substring(0, item_a_href.length - 1)
+        }
+        if (path === item_a_href) {
+            item_a.children().children().addClass("--select");
+            break;
+        }
+    }
+}
 
 /*-------------------------------------------------------------------------*/
 /* MOBILE NAVIGATION */
@@ -88,65 +109,37 @@ function hideMobileNav() {
 /* SHOW/SCROLL NAVIGATION */
 /* -----------------------------------------------------------------------*/
 
+function FixNav(fix, header, nav) {
+    if (fix) {
+        if ( !header.hasClass( "fix-nav" ) ) {
+            header.addClass( "fix-nav" );
+        }
+
+        if ( !nav.hasClass( "fix-nav" ) ) {
+            nav.addClass( "fix-nav" );
+        }
+    } else {
+        if ( header.hasClass( "fix-nav" ) ) {
+            header.removeClass( "fix-nav" );
+        }
+
+        if ( nav.hasClass( "fix-nav" ) ) {
+            nav.removeClass( "fix-nav" );
+        }
+    }
+}
+
 function ShowHideNav() {
     var previousScroll = 0, // previous scroll position
         $header = $( ".header" ), // just storing header in a variable
+        $header_nav = $( ".header__links"),
         navHeight = $header.outerHeight(), // nav height
         detachPoint = 576 + 60, // after scroll past this nav will be hidden
         hideShowOffset = 6; // scroll value after which nav will be shown/hidden
-
+        FixNav($( window ).scrollTop() != 0, $header, $header_nav);
     $( window ).scroll( function() {
-        var wW = 1024;
-
-        // if window width is more than 1024px start show/hide nav
-        if ( $( window ).width() >= wW ) {
-            if ( !$header.hasClass( "fixed" ) ) {
-                var currentScroll = $( this ).scrollTop(),
-                    scrollDifference = Math.abs( currentScroll - previousScroll );
-
-                // if scrolled past nav
-                if ( currentScroll > navHeight ) {
-
-                    // if scrolled past detach point -> show nav
-                    if ( currentScroll > detachPoint ) {
-                        if ( !$header.hasClass( "fix-nav" ) ) {
-                            $header.addClass( "fix-nav" );
-                        }
-                    }
-
-                    if ( scrollDifference >= hideShowOffset ) {
-                        if ( currentScroll > previousScroll ) {
-
-                            // scroll down -> hide nav
-                            if ( !$header.hasClass( "hide-nav" ) ) {
-                                $header.addClass( "hide-nav" );
-                              }
-                        } else {
-
-                            // scroll up -> show nav
-                            if ( $header.hasClass( "hide-nav" ) ) {
-                                $( $header ).removeClass( "hide-nav" );
-                            }
-                        }
-                    }
-                } else {
-
-                    // at the top
-                    if ( currentScroll <= 0 ) {
-                        $header.removeClass( "hide-nav show-nav" );
-                        $header.addClass( "top" );
-                    }
-                }
-            }
-
-            // scrolled to the bottom -> show nav
-            if ( ( window.innerHeight + window.scrollY ) >= document.body.offsetHeight ) {
-                $header.removeClass( "hide-nav" );
-            }
-            previousScroll = currentScroll;
-        } else {
-            $header.addClass( "fix-nav" );
-        }
+        const fix = $( this ).scrollTop() != 0
+        FixNav(fix, $header, $header_nav);
     } );
 }
 
